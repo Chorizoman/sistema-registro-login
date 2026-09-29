@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <style>
+        body {
+            background-color: #FFFBDB;
+        }
+    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>inicio de sesión ₍^. .^₎⟆</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="shadow p-4">
+            <h1>Inicia sesión</h1> 
+            <form id="formularioLogin">
+                <!-- Correo electronico -->
+                <div class="mb-3">
+                    <label for="loginEmail" class="form-label">Correo electronico</label>
+                    <input type="email" class="form-control" id="loginEmail" aria-describedby="emailHelp" required placeholder="Ingrese su correo electronico">
+                    <div id="emailHelp" class="form-text">Si ingresas tu correo electronico algo pasará</div>
+                </div>
+                <!-- Contraseña -->
+                <div class="mb-3">
+                    <label for="loginPassword" class="form-label">Contraseña</label>
+                    <div class="input-group">
+                        <input type="password" class="form-control" id="loginPassword" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#%&]).{8,}" required placeholder="Ingresa tu contraseña">
+                        <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <!-- Mensaje de estado -->
+                <div id="mensaje" class="mb-3"></div>
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('loginPassword');
+
+        togglePassword.addEventListener('click', function() {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            
+            this.innerHTML = type === 'password' ? '<i class="bi bi-eye"></i>' : '<i class="bi bi-eye-slash"></i>';
+        });
+
+        // Enviar formulario de login
+        const formulario = document.getElementById('formularioLogin');
+        const mensaje = document.getElementById('mensaje');
+
+        formulario.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    mensaje.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
+                    return;
+                }
+
+                mensaje.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                formulario.reset();
+                passwordInput.setAttribute('type', 'password');
+                togglePassword.innerHTML = '<i class="bi bi-eye"></i>';
+
+            } catch (error) {
+                mensaje.innerHTML = `<div class="alert alert-danger">Ocurrió un error: ${error.message}</div>`;
+            }
+        });
+    </script>
+</body>
+</html>

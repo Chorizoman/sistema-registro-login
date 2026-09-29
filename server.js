@@ -10,6 +10,15 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Middleware para ver todas las peticiones
+app.use((req, res, next) => {
+  console.log(`[${new Date().toLocaleTimeString()}] ${req.method} ${req.path}`);
+  if (req.method === 'POST') {
+    console.log('Body recibido:', req.body);
+  }
+  next();
+});
+
 // Conectar a la base de datos SQLite
 const db = new sqlite3.Database(dbPath, (err) => {
   if (err) {
@@ -50,9 +59,16 @@ app.get('/login', (req, res) => {
 
 // API para guardar registro
 app.post('/api/registro', (req, res) => {
+  console.log('=== REGISTRO RECIBIDO ===');
   const { email, password, nombre, fecha } = req.body;
 
+  console.log('Email:', email);
+  console.log('Password:', password);
+  console.log('Nombre:', nombre);
+  console.log('Fecha:', fecha);
+
   if (!email || !password || !nombre || !fecha) {
+    console.log('ERROR: Campos faltantes');
     return res.status(400).json({
       success: false,
       message: 'Todos los campos son obligatorios.'
@@ -64,6 +80,7 @@ app.post('/api/registro', (req, res) => {
     [email, password, nombre, fecha],
     function (err) {
       if (err) {
+        console.error('ERROR en INSERT:', err.message);
         if (err.message.includes('UNIQUE constraint failed')) {
           return res.status(400).json({
             success: false,
@@ -76,6 +93,7 @@ app.post('/api/registro', (req, res) => {
         });
       }
 
+      console.log('✓ Usuario guardado correctamente');
       return res.status(201).json({
         success: true,
         message: 'Registro exitoso.'
@@ -86,9 +104,14 @@ app.post('/api/registro', (req, res) => {
 
 // API para login
 app.post('/api/login', (req, res) => {
+  console.log('=== LOGIN RECIBIDO ===');
   const { email, password } = req.body;
 
+  console.log('Email:', email);
+  console.log('Password:', password);
+
   if (!email || !password) {
+    console.log('ERROR: Email o password faltante');
     return res.status(400).json({
       success: false,
       message: 'Correo y contraseña obligatorios.'
@@ -100,6 +123,7 @@ app.post('/api/login', (req, res) => {
     [email, password],
     (err, row) => {
       if (err) {
+        console.error('ERROR en SELECT:', err.message);
         return res.status(500).json({
           success: false,
           message: 'Error al verificar usuario.'
@@ -107,12 +131,14 @@ app.post('/api/login', (req, res) => {
       }
 
       if (!row) {
+        console.log('❌ Usuario no encontrado');
         return res.status(401).json({
           success: false,
           message: 'Correo o contraseña incorrectos.'
         });
       }
 
+      console.log('✓ Usuario autenticado:', row.nombre);
       return res.status(200).json({
         success: true,
         message: 'Operación realizada con éxito.'
